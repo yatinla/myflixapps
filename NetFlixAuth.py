@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Module to retrieve Netflix authentication token for my
+# Module to retrieve Netflix authentication token for 
 # Netflix applications.
 #
 import pickle
@@ -11,7 +11,7 @@ import sys
 import os
 import webbrowser
 
-class TayorNetflixAuth(object):
+class NetflixAuth(object):
   def __init__(self, appname, consumer_token, consumer_secret ):
     self.appname = appname
     self.consumer_token = consumer_token
@@ -48,7 +48,7 @@ class TayorNetflixAuth(object):
       print 'Auth secret: ' + self.secret
 
 def useage():
-    print 'Useage: TaylorNetflixAuth.py file_name [get]'
+    print 'Useage: NetflixAuth.py file_name [get]'
     print '  If get is omitted it attempts to open file_name and'
     print '  display info about netflix authentication.  If'
     print '  get is present also then it attempts to get the auth'
@@ -109,7 +109,7 @@ if __name__ == "__main__":
       print 'The data has been saved in the file ' + fname
       print 'To display the data use this same script without the get argument'
   else:
-    o = TayorNetflixAuth.load(fname)
+    o = NetflixAuth.load(fname)
     print "Here is the data from the file %s:\n" % fname
     o.dump() 
 
