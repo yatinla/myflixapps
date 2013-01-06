@@ -18,7 +18,7 @@ class NetflixAuth(object):
     self.consumer_secret = consumer_secret
     self.auth_token = None
     self.auth_secret = None
-  def user_auth( token, secret ):
+  def user_auth( self, token, secret ):
     self.auth_token = token
     self.auth_secret = secret
 
@@ -29,6 +29,7 @@ class NetflixAuth(object):
     f.close()
 
   ''' Class method to load object from file '''
+  @staticmethod
   def load(fname):
     f = open(fname)
     o = pickle.load(f)
@@ -45,7 +46,7 @@ class NetflixAuth(object):
     if self.auth_token != None:
       print 'Auth token: ' + self.auth_token
     if self.auth_secret != None:
-      print 'Auth secret: ' + self.secret
+      print 'Auth secret: ' + self.auth_secret
 
 def useage():
     print 'Useage: NetflixAuth.py file_name [get]'
