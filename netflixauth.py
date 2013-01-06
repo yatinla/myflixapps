@@ -31,6 +31,7 @@ class NetflixAuth(object):
   ''' Class method to load object from file '''
   @staticmethod
   def load(fname):
+    print 'Loading from ' + fname
     f = open(fname)
     o = pickle.load(f)
     f.close()
