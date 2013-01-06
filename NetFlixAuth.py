@@ -58,7 +58,7 @@ def get_info(fname):
   appname = raw_input("Enter application name:")
   consumer_token = raw_input("Enter consumer token:")
   consumer_secret = raw_input("Enter consumer secret:")
-  o = TayorNetflixAuth( appname, consumer_token, consumer_secret )
+  o = NetflixAuth( appname, consumer_token, consumer_secret )
 
   netflix = NetflixAPIV2( appname, consumer_token, consumer_secret )
 
