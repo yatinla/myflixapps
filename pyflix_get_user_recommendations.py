@@ -57,8 +57,10 @@ class SearchDialog:
         f2.pack()
         self.l = Label(f2,text="Oldest Year:")
         self.l.pack(side=LEFT) 
-        
-        self.movie_year_minimum = Spinbox(f2, from_ = params.released, to_ = 2012, width = 8 )
+       
+        self.released = StringVar()
+        self.movie_year_minimum = Spinbox(f2, from_ = 1900, to_ = 2012, width = 8, textvariable=self.released )
+        self.released.set(str(params.released))
         self.movie_year_minimum.pack(side=RIGHT)
 
         f3 = Frame(frame, padx=10, pady=10)
