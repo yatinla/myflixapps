@@ -13,6 +13,7 @@ if len(sys.argv) == 1:
   fname = 'authinfo'
 
 
+
 try:
   authdata = NetflixAuth.load( fname )
 except Exception as e:
@@ -23,6 +24,7 @@ except Exception as e:
     print 'Failed loading auth data from file ' + fname
     print e
     sys.exit(0)
+
 
 # Find out what kind of programming to search for recommendations
 # on etc. via a small Tkinter dialog
@@ -39,10 +41,12 @@ class SearchDialog:
         frame = Frame(master)
         frame.pack()
 
+        params = FilterParams.load()
+
         f1 = Frame(frame, padx=10, pady=10)
         f1.pack()
         self.show_type = IntVar()
-        self.show_type.set(1)
+        self.show_type.set(params.category)
 
         self.l = Label(f1,text="Media Type:").pack(side=LEFT,fill=X)
         rb = Radiobutton(f1, text="Any", variable=self.show_type, value=SearchDialog.ANY_TYPE).pack(anchor=W,side=RIGHT)
@@ -54,7 +58,7 @@ class SearchDialog:
         self.l = Label(f2,text="Oldest Year:")
         self.l.pack(side=LEFT) 
         
-        self.movie_year_minimum = Spinbox(f2, from_ = 1980, to_ = 2012, width = 8 )
+        self.movie_year_minimum = Spinbox(f2, from_ = params.released, to_ = 2012, width = 8 )
         self.movie_year_minimum.pack(side=RIGHT)
 
         f3 = Frame(frame, padx=10, pady=10)
@@ -62,17 +66,22 @@ class SearchDialog:
         self.l = Label(f3,text="Lowest Rating:")
         self.l.pack(side=LEFT) 
 
-        self.lowest_rating = Spinbox(f3, from_ = 1, to_ = 5, increment = 0.1, width = 8 )
+        self.rating = StringVar()
+        self.lowest_rating = Spinbox(f3, from_ = 1, to_ = 5, increment = 0.1, width = 8, textvariable=self.rating )
+        self.rating.set(str(params.rating))
         self.lowest_rating.pack(side=RIGHT)
 
         self.button = Button(master, text="Done", fg="black", command=frame.quit)
         self.button.pack(side=BOTTOM)
 
-        #self.hi_there = Button(frame, text="Hello", command=self.say_hi)
-        #self.hi_there.pack(side=LEFT)
-
-    def say_hi(self):
-        print "hi there, everyone!"
+    ## TODO: Why does it not work to use this save?  Seems like pickle tries
+    ## to pickle the SearchDialog object as if in FilterParams.save() the 'self'
+    ## is treated as the 'self' of SearchDialog object????
+    def save(self):
+        params = FilterParams( category=self.show_type.get(), released = self.movie_year_minimum, 
+                               rating=self.lowest_rating )
+        print 'params is ', params
+        params.save()
 
     def center_window(self, w=300, h=200):
         # get screen width and height
@@ -82,6 +91,28 @@ class SearchDialog:
         x = (ws/2) - (w/2)    
         y = (hs/2) - (h/2)
         self.master.geometry('%dx%d+%d+%d' % (w, h, x, y))
+
+class FilterParams(object):
+  '''
+    Class to persist the filter params
+  '''
+  def __init__(self, category=SearchDialog.MOVIE_TYPE, released=2000, rating=3.5 ):
+    self.category = category
+    self.released = released
+    self.rating = rating
+
+  def save(self):
+    f = open('filter.ini', 'wb')
+    pickle.dump(self,f)
+    f.close()
+
+  @staticmethod
+  def load():
+    try:
+      f = open('filter.ini')
+      return pickle.load(f)
+    except:
+      return FilterParams()
 
 root = Tk()
 root.wm_title("Search Criteria")
@@ -113,6 +144,13 @@ try:
 except:
   print 'Invalid minimum rating'
   sys.exit(0)
+
+# Save choices for next time to load upon starting
+#dlg.save()
+
+params = FilterParams( category=category,released=released_after, rating=min_rating )
+print 'params is ', params
+params.save()
 
 netflix = NetflixAPIV2( authdata.appname, authdata.consumer_token, authdata.consumer_secret )
 
