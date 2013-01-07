@@ -217,7 +217,7 @@ def filter_show( movie, cat=SearchDialog.ANY_TYPE, released=0, min_rating=0.0 ):
 
 # Create html file on the fly to display results
 results = '<!DOCTYPE HTML> <html> <body>'
-results += '<table border="1"> <tr> <th>Title</th> <th>Released</th> <th>Predicted Rating</th> <th>Average Rating</th> <th>Link</th> <</tr>'
+results += '<table border="1"> <tr> <th>Title</th> <th>Released</th> <th>Predicted Rating</th> <th>Average Rating</th> <th>Link</th> </tr>'
 
 matches = 0
 
@@ -249,7 +249,15 @@ try:
     f = open('recommendations.html', 'w')
     f.write(results)
     f.close()
-    webbrowser.open( './recommendations.html' )
+    try:
+      # Prefer firefox
+      #webbrowser.register('firefox')
+      wb = webbrowser.get('firefox')
+      wb.open_new_tab('./recommendations.html')
+    except:
+      # Use default
+      print 'Use default browser'
+      webbrowser.open_new_tab( './recommendations.html' )
   except:
     print 'Could not save/display results in web browser'
     print 'Here they are:'
