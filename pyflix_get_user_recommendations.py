@@ -170,7 +170,10 @@ except NetflixError as e:
   print 'Exception getting user recommendations: ', e
   sys.exit(0)
 
-print json.dumps( reco, sort_keys=False, indent=4, separators=(',', ': '))
+# For debugging mostly save results as json string
+f = open('recommendations.json', 'w' )
+f.write(json.dumps( reco, sort_keys=False, indent=4, separators=(',', ': ')))
+f.close()
 
 # Let's pickle it
 f = open('Recommendations.pickle', 'wb')

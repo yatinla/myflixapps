@@ -10,6 +10,7 @@ import sys
 import os
 import webbrowser
 from netflixauth import NetflixAuth
+import json
 
 fname = raw_input('Enter file name with auth info: ')
 
@@ -24,6 +25,10 @@ netflix = NetflixAPIV2( authdata.appname, authdata.consumer_token, authdata.cons
 movies = netflix.title_autocomplete(search_term)
 
 print 'Movies Titles with ' + search_term + ' in them: ' + "\n"
+
+f = open('search.json', 'w' )
+f.write(json.dumps( movies, sort_keys=False, indent=4, separators=(',', ': ')))
+f.close()
 
 for title in movies['autocomplete']['autocomplete_item']:
     print '\t' + unicode(title['title']['short'])
