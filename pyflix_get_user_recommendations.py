@@ -28,8 +28,11 @@ except Exception as e:
 # on etc. via a small Tkinter dialog
 
 class SearchDialog:
+
     MOVIE_TYPE = 1
     TV_TYPE = 2
+    ANY_TYPE = 3
+
     def __init__(self, master):
 
         self.master = master
@@ -42,6 +45,7 @@ class SearchDialog:
         self.show_type.set(1)
 
         self.l = Label(f1,text="Media Type:").pack(side=LEFT,fill=X)
+        rb = Radiobutton(f1, text="Any", variable=self.show_type, value=SearchDialog.ANY_TYPE).pack(anchor=W,side=RIGHT)
         rb = Radiobutton(f1, text="Television", variable=self.show_type, value=SearchDialog.TV_TYPE).pack(anchor=E,side=RIGHT)
         rb = Radiobutton(f1, text="Movie", variable=self.show_type, value=SearchDialog.MOVIE_TYPE).pack(anchor=W,side=RIGHT)
 
@@ -86,18 +90,29 @@ dlg.center_window()
 
 root.mainloop()
 
-print 'Main loop finished: ', dlg.show_type.get()
+category = dlg.show_type.get()
 
-if dlg.show_type.get() == SearchDialog.MOVIE_TYPE:
-  print 'You selected movies'
-elif dlg.show_type.get() == SearchDialog.TV_TYPE:
-  print 'You selected television'
+if category == SearchDialog.MOVIE_TYPE:
+  print 'Will show results only for movies'
+elif category == SearchDialog.TV_TYPE:
+  print 'Will show results only for TV'
+elif category == SearchDialog.ANY_TYPE:
+  print 'Will show results for TV or movies'
 
 print 'Will ignore shows released before ', dlg.movie_year_minimum.get()
 print 'Will ignore shows rated less than  ', dlg.lowest_rating.get()
 
+try:
+  released_after = int(dlg.movie_year_minimum.get())
+except:
+  print 'Invalid year!'
+  sys.exit(0)
 
-sys.exit(0)
+try:
+  min_rating = float(dlg.lowest_rating.get())
+except:
+  print 'Invalid minimum rating'
+  sys.exit(0)
 
 netflix = NetflixAPIV2( authdata.appname, authdata.consumer_token, authdata.consumer_secret )
 
@@ -123,12 +138,51 @@ pickle.dump( reco, f )
 f.close()
 print 'User recommendations saved to Recommendations.pickle'
 
+
+def filter_show( movie, cat=SearchDialog.ANY_TYPE, released=0, min_rating=0.0 ):
+  '''
+    Return True if the show should be included
+    in the results or False otherwise
+  '''
+  if cat != SearchDialog.ANY_TYPE:
+    for c in movie['category']:
+      if cat == SearchDialog.MOVIE_TYPE:
+        if 'TV' in c['term'] or 'Television' in c['term']:
+          #print 'Not interested in: ', c['term']
+          return False
+  try:
+    release_date = int(movie['release_year'])
+    if release_date < released:
+      #print 'Show is too old: ', release_date
+      return False
+  except:
+    print 'Hmmm, release_date from Netflix seems invalid'
+
+  try:
+    rating = float(movie['average_rating'])
+    if rating < min_rating:
+      #print 'Rating is too low: ', rating
+      return False
+  except:
+    print 'Hmmm, release_date from Netflix seems invalid'
+
+  return True
+
+
 # Create html file on the fly to display results
 results = '<!DOCTYPE HTML> <html> <body>'
 results += '<table border="1"> <tr> <th>Title</th> <th>Predicted Rating</th> <th>Average Rating</th> <th>Link</th> <</tr>'
 
+matches = 0
+
 try:
   for movie in reco['recommendations']['recommendation']:
+
+    # Skip movies that don't match search criteria
+    if not filter_show( movie, category, released_after, min_rating ):
+      continue
+
+    matches += 1
     results += '<tr>'
     results += '<td>' + unicode(movie['title']['regular']).strip() + '</td>'
     results += '<td>' + unicode(movie['predicted_rating']).strip() + '</td>'
