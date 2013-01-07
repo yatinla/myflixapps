@@ -146,9 +146,12 @@ def filter_show( movie, cat=SearchDialog.ANY_TYPE, released=0, min_rating=0.0 ):
   '''
   if cat != SearchDialog.ANY_TYPE:
     for c in movie['category']:
+      is_tv = 'tv' in c['term'].lower() or 'television' in c['term'].lower()
       if cat == SearchDialog.MOVIE_TYPE:
-        if 'TV' in c['term'] or 'Television' in c['term']:
-          #print 'Not interested in: ', c['term']
+        if is_tv:
+          return False
+      elif cat == SearchDialog.TV_TYPE:
+        if not is_tv:
           return False
   try:
     release_date = int(movie['release_year'])
@@ -171,7 +174,7 @@ def filter_show( movie, cat=SearchDialog.ANY_TYPE, released=0, min_rating=0.0 ):
 
 # Create html file on the fly to display results
 results = '<!DOCTYPE HTML> <html> <body>'
-results += '<table border="1"> <tr> <th>Title</th> <th>Predicted Rating</th> <th>Average Rating</th> <th>Link</th> <</tr>'
+results += '<table border="1"> <tr> <th>Title</th> <th>Released</th> <th>Predicted Rating</th> <th>Average Rating</th> <th>Link</th> <</tr>'
 
 matches = 0
 
@@ -185,6 +188,7 @@ try:
     matches += 1
     results += '<tr>'
     results += '<td>' + unicode(movie['title']['regular']).strip() + '</td>'
+    results += '<td>' + unicode(movie['release_year']).strip() + '</td>'
     results += '<td>' + unicode(movie['predicted_rating']).strip() + '</td>'
     results += '<td>' + unicode(movie['average_rating']).strip() + '</td>'
     results += '<td>'
