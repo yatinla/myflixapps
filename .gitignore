@@ -1,0 +1,6 @@
+authinfo
+*.pyc
+*.swp
+*.*~
+*.html
+*.pickle
