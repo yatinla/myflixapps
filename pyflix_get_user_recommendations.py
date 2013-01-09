@@ -264,17 +264,30 @@ try:
         details = netflix.get_title( FORMAT_AVAILABILITY_URL + title_id, 'format_availability' )
         if details != None:
           ''' Send to json file '''
-          fname = title_id + '.json'
+          fname = unicode(movie['title']['regular']).strip() + '.json'
           f = open( fname, 'w' )
           f.write(json.dumps( details, sort_keys=False, indent=4, separators=(',', ': ')))
           f.close()
           print 'Saved format availability details to file', fname
           formats = ''
-          for a in details['delivery_formats']['availability']:
-            formats += a['category']['label'] + '<br>'
+          if type(details['delivery_formats']['availability']) == list:
+            for a in details['delivery_formats']['availability']:
+              try:
+                date = a['available_from']
+                formats += a['category']['term'] + '<br>'
+              except:
+                pass
+          else:
+            try:
+              date = details['delivery_formats']['availability']['available_from']
+              formats += details['delivery_formats']['availability']['category']['term']
+            except:
+              pass
+
           if len(formats) != 0:
             print 'Available formats: ', formats
-
+          else:
+            formats = 'Not available'
       except Exception as e:
         print 'Exception getting title details: ', e
 
