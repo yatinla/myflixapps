@@ -7,6 +7,9 @@ from netflixauth import NetflixAuth
 import json
 import pickle
 from Tkinter import *
+import re
+
+FORMAT_AVAILABILITY_URL = 'http://api-public.netflix.com/catalog/titles/movies/' 
 
 if len(sys.argv) == 1:
   # Try to get default file 
@@ -37,7 +40,7 @@ class SearchDialog:
 
     def __init__(self, master):
 
-        self.master = master
+        self.master = master 
         frame = Frame(master)
         frame.pack()
 
@@ -217,7 +220,7 @@ def filter_show( movie, cat=SearchDialog.ANY_TYPE, released=0, min_rating=0.0 ):
 
 # Create html file on the fly to display results
 results = '<!DOCTYPE HTML> <html> <body>'
-results += '<table border="1"> <tr> <th>Title</th> <th>Released</th> <th>Predicted Rating</th> <th>Average Rating</th> <th>Link</th> </tr>'
+results += '<table border="1"> <tr> <th>Title</th> <th>Released</th> <th>Formats</th> <th>Predicted Rating</th> <th>Average Rating</th> <th>Link</th> </tr>'
 
 matches = 0
 
@@ -228,10 +231,58 @@ try:
     if not filter_show( movie, category, released_after, min_rating ):
       continue
 
+    # Get title details in particular format availability.  Note that
+    # the pyflix2 API's get_title is NOT for the URL found directly
+    # in the 'id' field of the movie recommendations but the numerical
+    # catalog ID should be the same for use with URL
+    #
+    # http://api-public.netflix.com/catalog/titles/movies/id/format_availability
+    #
+    # where id is a number like 709031.  So we'll use a regex to find that number
+    # from the id URL we have
+    #
+    title_id = None
+    try:
+      m = re.search( '\/(\d*?)$', movie['id'] )
+      if m != None:
+        print 'Regex worked and got string ' + m.group(0)
+        # Formulate the URL for the ID used to get format availability
+        # from the catalog without user authentication
+        #
+        # HMMM is it different for movies and TV shows?
+        #
+        title_id = m.group(1)
+        
+        # 
+        # Note that we don't have to add format_availability. The pyflix2 api will do
+        # that
+    except Exception as e:
+      print 'Exception with regex: ', e
+
+    if title_id != None:
+      try:
+        details = netflix.get_title( FORMAT_AVAILABILITY_URL + title_id, 'format_availability' )
+        if details != None:
+          ''' Send to json file '''
+          fname = title_id + '.json'
+          f = open( fname, 'w' )
+          f.write(json.dumps( details, sort_keys=False, indent=4, separators=(',', ': ')))
+          f.close()
+          print 'Saved format availability details to file', fname
+          formats = ''
+          for a in details['delivery_formats']['availability']:
+            formats += a['category']['label'] + '<br>'
+          if len(formats) != 0:
+            print 'Available formats: ', formats
+
+      except Exception as e:
+        print 'Exception getting title details: ', e
+
     matches += 1
     results += '<tr>'
     results += '<td>' + unicode(movie['title']['regular']).strip() + '</td>'
     results += '<td>' + unicode(movie['release_year']).strip() + '</td>'
+    results += '<td>' + formats + '</td>'
     results += '<td>' + unicode(movie['predicted_rating']).strip() + '</td>'
     results += '<td>' + unicode(movie['average_rating']).strip() + '</td>'
     results += '<td>'
